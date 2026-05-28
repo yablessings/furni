@@ -392,22 +392,21 @@
                 sendDataToJotform(); // Instantly clears or revises data pipeline dynamically
             }
         }
+function sendDataToJotform() {
+    const selectedItems = furnitureInventory.filter(
+        item => item.quantity > 0 && item.isLocked
+    );
 
-        // Send locked inputs back to Jotform data fields
-        function sendDataToJotform() {
-            const selectedItems = furnitureInventory.filter(item => item.quantity > 0 && item.isLocked);
-            const formattedOutput = selectedItems.map(item => `${item.name} (Qty: ${item.quantity})`).join(', ');
-            
-            JotForm.sendResult({
-                valid: true,
-                value: formattedOutput
-            });
-        }
+    const formattedOutput = selectedItems
+        .map(item => `${item.name} (Qty: ${item.quantity})`)
+        .join(', ');
 
-        searchInput.addEventListener('input', (e) => {
-            searchQuery = e.target.value;
-            renderItems();
-        });
+    // Send data to parent Jotform iframe
+    parent.postMessage({
+        type: "furniData",
+        value: formattedOutput
+    }, "*");
+}
 
         // Initialize Jotform Widget Environment
         JotForm.subscribe("ready", function() {
