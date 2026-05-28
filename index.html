@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation Inventory Selection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Jotform Custom Widget API -->
+    <script src="//js.jotform.com/JotFormCustomWidget.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-white p-2 antialiased font-sans">
+
+    <div class="w-full bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+        
+        <!-- Search Bar Section -->
+        <div class="p-4 border-b border-slate-100 bg-white sticky top-0 z-10">
+            <div class="flex items-center">
+                <span class="text-xl text-slate-500 mr-3 select-none">🔍</span>
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Search furniture items..." 
+                    class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                />
+            </div>
+        </div>
+
+        <!-- Scrollable Items List Container -->
+        <div id="items-container" class="max-h-[450px] overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+            <!-- Items populate here -->
+        </div>
+
+    </div>
+
+    <script>
+        // Master Inventory Array with Updated Emoji Formats
+        const furnitureInventory = [
+            { id: 1, name: "Appliance: Air Conditioner" },
+            { id: 2, name: "Appliance: Dehumidifier" },
+            { id: 3, name: "Appliance: Dishwasher" },
+            { id: 4, name: "Appliance: Dorm Fridge" },
+            { id: 5, name: "Appliance: Dryer (Electric)" },
+            { id: 6, name: "Appliance: Dryer (Gas)" },
+            { id: 7, name: "Appliance: Flatscreen Television" },
+            { id: 8, name: "Appliance: Freezer" },
+            { id: 9, name: "Appliance: Microwave (Built-In) ⛔", status: "dont-pickup" },
+            { id: 10, name: "Appliance: Microwave (Countertop)" },
+            { id: 11, name: "Appliance: Oven" },
+            { id: 12, name: "Appliance: Oven (Built-In) ⛔", status: "dont-pickup" },
+            { id: 13, name: "Appliance: Refrigerator" },
+            { id: 14, name: "Appliance: Stove (Electric)" },
+            { id: 15, name: "Appliance: Stove (Gas)" },
+            { id: 16, name: "Appliance: Stove Top (Built-In) ⛔", status: "dont-pickup" },
+            { id: 17, name: "Appliance: Tube Television ⛔", status: "dont-pickup" },
+            { id: 18, name: "Appliance: Vintage Console Stereo" },
+            { id: 19, name: "Appliance: Washer" },
+            { id: 20, name: "Bedroom: Adjustable Bed ⛔", status: "dont-pickup" },
+            { id: 21, name: "Bedroom: Armoire (Non-TV)" },
+            { id: 22, name: "Bedroom: Bed Frame Cali King" },
+            { id: 23, name: "Bedroom: Bed Frame Full" },
+            { id: 24, name: "Bedroom: Bed Frame Queen" },
+            { id: 25, name: "Bedroom: Bed Frame Twin" },
+            { id: 26, name: "Bedroom: Box Spring - Full" },
+            { id: 27, name: "Bedroom: Box Spring - King" },
+            { id: 28, name: "Bedroom: Box Spring - Queen" },
+            { id: 29, name: "Bedroom: Box Spring - Twin" },
+            { id: 30, name: "Bedroom: Bunkbed ⛔", status: "dont-pickup" },
+            { id: 31, name: "Bedroom: Bunkie Board" },
+            { id: 32, name: "Bedroom: Bureau" },
+            { id: 33, name: "Bedroom: Captain's Bed" },
+            { id: 34, name: "Bedroom: Cedar Chest" },
+            { id: 35, name: "Bedroom: Chest of Drawers" },
+            { id: 36, name: "Bedroom: Daybed" },
+            { id: 37, name: "Bedroom: Dresser" },
+            { id: 38, name: "Bedroom: Footlocker" },
+            { id: 39, name: "Bedroom: Headboard/Footboard" },
+            { id: 40, name: "Bedroom: Highboy" },
+            { id: 41, name: "Bedroom: Hope Chest" },
+            { id: 42, name: "Bedroom: Hospital Bed ⛔", status: "dont-pickup" },
+            { id: 43, name: "Bedroom: Jewelry Armoire" },
+            { id: 44, name: "Bedroom: Lift Bed ⛔", status: "dont-pickup" },
+            { id: 45, name: "Bedroom: Loft Bed ⛔", status: "dont-pickup" },
+            { id: 46, name: "Bedroom: Mattress - Full (Like New)" },
+            { id: 47, name: "Bedroom: Mattress - King (Like New)" },
+            { id: 48, name: "Bedroom: Mattress - Queen (Like New)" },
+            { id: 49, name: "Bedroom: Mattress - Twin (Like New)" },
+            { id: 50, name: "Bedroom: Metal Bed Frame" },
+            { id: 51, name: "Bedroom: Nightstand" },
+            { id: 52, name: "Bedroom: Platform" },
+            { id: 53, name: "Bedroom: Pop-Up Trundles" },
+            { id: 54, name: "Bedroom: Quilt Rack" },
+            { id: 55, name: "Bedroom: Trunk" },
+            { id: 56, name: "Bedroom: Trundle Bed" },
+            { id: 57, name: "Bedroom: Vanity" },
+            { id: 58, name: "Bedroom: Vanity Stool" },
+            { id: 59, name: "Bedroom: Wardrobe" },
+            { id: 60, name: "Children/Nursery: Bassinet ⛔", status: "dont-pickup" },
+            { id: 61, name: "Children/Nursery: Bean Bag/Big Joe" },
+            { id: 62, name: "Children/Nursery: Chair" },
+            { id: 63, name: "Children/Nursery: Changing Table ⛔", status: "dont-pickup" },
+            { id: 64, name: "Children/Nursery: Child Rocker" },
+            { id: 65, name: "Children/Nursery: Children's Chair" },
+            { id: 66, name: "Children/Nursery: Crib ⛔", status: "dont-pickup" },
+            { id: 67, name: "Children/Nursery: Crib Mattress ⛔", status: "dont-pickup" },
+            { id: 68, name: "Children/Nursery: High Chair ⛔", status: "dont-pickup" },
+            { id: 69, name: "Children/Nursery: Table" },
+            { id: 70, name: "Children/Nursery: Toddler Bed ⛔", status: "dont-pickup" },
+            { id: 71, name: "Children/Nursery: Toy Box" },
+            { id: 72, name: "Decor: Dresser Mirror" },
+            { id: 73, name: "Decor: Large Artwork" },
+            { id: 74, name: "Decor: Large Wall Mirror" },
+            { id: 75, name: "Decor: Room Divider" },
+            { id: 76, name: "Decor: Screen/Room Divider" },
+            { id: 77, name: "Decor: Standing Mirror" },
+            { id: 78, name: "Dining/Kitchen: Baker’s Rack" },
+            { id: 79, name: "Dining/Kitchen: Bench" },
+            { id: 80, name: "Dining/Kitchen: Breakfront" },
+            { id: 81, name: "Dining/Kitchen: Buffet" },
+            { id: 82, name: "Dining/Kitchen: Cart/Island" },
+            { id: 83, name: "Dining/Kitchen: China Cabinet" },
+            { id: 84, name: "Dining/Kitchen: Dining Chair" },
+            { id: 85, name: "Dining/Kitchen: Dining Table" },
+            { id: 86, name: "Dining/Kitchen: Hutch" },
+            { id: 87, name: "Dining/Kitchen: Kitchen Cabinet" },
+            { id: 88, name: "Dining/Kitchen: Pantry" },
+            { id: 89, name: "Dining/Kitchen: Stool" },
+            { id: 90, name: "Exercise: Barbells ✍🏻", status: "review" },
+            { id: 91, name: "Exercise: Bike ✍🏻", status: "review" },
+            { id: 92, name: "Exercise: Cable Machine ✍🏻", status: "review" },
+            { id: 93, name: "Exercise: Elliptical ✍🏻", status: "review" },
+            { id: 94, name: "Exercise: Exercise Ball ✍🏻", status: "review" },
+            { id: 95, name: "Exercise: Press Machine ✍🏻", status: "review" },
+            { id: 96, name: "Exercise: Recumbent Bike ✍🏻", status: "review" },
+            { id: 97, name: "Exercise: Rowing Machine ✍🏻", status: "review" },
+            { id: 98, name: "Exercise: Spinner ✍🏻", status: "review" },
+            { id: 99, name: "Exercise: Squat Rack ✍🏻", status: "review" },
+            { id: 100, name: "Exercise: StairMaster ✍🏻", status: "review" },
+            { id: 101, name: "Exercise: Treadmill (Folding) ✍🏻", status: "review" },
+            { id: 102, name: "Exercise: Treadmill (Non-Folding) ✍🏻", status: "review" },
+            { id: 103, name: "Exercise: Vibration Plate ✍🏻", status: "review" },
+            { id: 104, name: "Exercise: Weight Bench ✍🏻", status: "review" },
+            { id: 105, name: "Exercise: Weights ✍🏻", status: "review" },
+            { id: 106, name: "Lighting: Ceiling Mount" },
+            { id: 107, name: "Lighting: Floor Lamp" },
+            { id: 108, name: "Lighting: Hanging Light" },
+            { id: 109, name: "Lighting: Table Lamp" },
+            { id: 110, name: "Lighting: Wall Light" },
+            { id: 111, name: "Living Room: Accent Chair" },
+            { id: 112, name: "Living Room: Armchair" },
+            { id: 113, name: "Living Room: Bench (Indoor)" },
+            { id: 114, name: "Living Room: Cabinet (Corner Style)" },
+            { id: 115, name: "Living Room: Chaise Lounge" },
+            { id: 116, name: "Living Room: Church Pew" },
+            { id: 117, name: "Living Room: Coffee Table" },
+            { id: 118, name: "Living Room: Console Table" },
+            { id: 119, name: "Living Room: Curio Cabinet" },
+            { id: 120, name: "Living Room: Electric Fireplace" },
+            { id: 121, name: "Living Room: End Table" },
+            { id: 122, name: "Living Room: Entertainment Center ⛔", status: "dont-pickup" },
+            { id: 123, name: "Living Room: Entry Table" },
+            { id: 124, name: "Living Room: Footstool" },
+            { id: 125, name: "Living Room: Futon" },
+            { id: 126, name: "Living Room: Glider" },
+            { id: 127, name: "Living Room: Lift Chair" },
+            { id: 128, name: "Living Room: Loveseat" },
+            { id: 129, name: "Living Room: Loveseat Sleeper" },
+            { id: 130, name: "Living Room: Nesting Tables" },
+            { id: 131, name: "Living Room: Ottoman" },
+            { id: 132, name: "Living Room: Recliner (Manual)" },
+            { id: 133, name: "Living Room: Recliner (Power)" },
+            { id: 134, name: "Living Room: Reclining Loveseat (Manual)" },
+            { id: 135, name: "Living Room: Reclining Loveseat (Power)" },
+            { id: 136, name: "Living Room: Reclining Sofa (Manual)" },
+            { id: 137, name: "Living Room: Reclining Sofa (Power)" },
+            { id: 138, name: "Living Room: Rocking Chair" },
+            { id: 139, name: "Living Room: Sectional" },
+            { id: 140, name: "Living Room: Sofa" },
+            { id: 141, name: "Living Room: Sofa Sleeper" },
+            { id: 142, name: "Living Room: Sofa Table" },
+            { id: 143, name: "Living Room: Sofa with Recliners (Manual)" },
+            { id: 144, name: "Living Room: Sofa with Recliners (Powered)" },
+            { id: 145, name: "Living Room: Swivel Rocker" },
+            { id: 146, name: "Living Room: TV Armoire ⛔", status: "dont-pickup" },
+            { id: 147, name: "Living Room: TV Stand (TV sits on top)" },
+            { id: 148, name: "Medical: Bariatric Chair ✍🏻", status: "review" },
+            { id: 149, name: "Medical: Commode ⛔", status: "dont-pickup" },
+            { id: 150, name: "Medical: Inversion Table ✍🏻", status: "review" },
+            { id: 151, name: "Medical: Scooter ✍🏻", status: "review" },
+            { id: 152, name: "Medical: Shower Chair ✍🏻", status: "review" },
+            { id: 153, name: "Medical: Transporter ✍🏻", status: "review" },
+            { id: 154, name: "Medical: Wheelchair ✍🏻", status: "review" },
+            { id: 155, name: "Misc: Bath Cabinets ✍🏻", status: "review" },
+            { id: 156, name: "Misc: Coat Rack" },
+            { id: 157, name: "Misc: Folding Chair" },
+            { id: 158, name: "Misc: Folding Table" },
+            { id: 159, name: "Misc: Grandfather Clock" },
+            { id: 160, name: "Misc: Ice Box" },
+            { id: 161, name: "Misc: Piano ⛔", status: "dont-pickup" },
+            { id: 162, name: "Misc: Piano Bench" },
+            { id: 163, name: "Misc: Plant Stand" },
+            { id: 164, name: "Misc: Retail Display Case" },
+            { id: 165, name: "Misc: Retail Display Rack" },
+            { id: 166, name: "Misc: Safe" },
+            { id: 167, name: "Misc: Sewing Table ⛔", status: "dont-pickup" },
+            { id: 168, name: "Misc: Tool Chest" },
+            { id: 169, name: "Misc: TV Tray" },
+            { id: 170, name: "Misc: Utility Cabinet" },
+            { id: 171, name: "Misc: Utility Shelving" },
+            { id: 172, name: "Misc: Wine Furniture" },
+            { id: 173, name: "Misc: Work Bench" },
+            { id: 174, name: "Office: Bookcase/Shelving" },
+            { id: 175, name: "Office: Conference Table ✍🏻", status: "review" },
+            { id: 176, name: "Office: Credenza" },
+            { id: 177, name: "Office: Desk" },
+            { id: 178, name: "Office: Desk Chair" },
+            { id: 179, name: "Office: Executive Desk ✍🏻", status: "review" },
+            { id: 180, name: "Office: File Cabinet" },
+            { id: 181, name: "Office: L-Shaped Desk ✍🏻", status: "review" },
+            { id: 182, name: "Office: Lobby Chair" },
+            { id: 183, name: "Office: Storage Cabinet" },
+            { id: 184, name: "Patio/Outdoor: Camp Chair" },
+            { id: 185, name: "Patio/Outdoor: Grill" },
+            { id: 186, name: "Patio/Outdoor: Heated Lamp" },
+            { id: 187, name: "Patio/Outdoor: Lounger" },
+            { id: 188, name: "Patio/Outdoor: Outdoor Bench" },
+            { id: 189, name: "Patio/Outdoor: Outdoor Cart" },
+            { id: 190, name: "Patio/Outdoor: Outdoor Chair" },
+            { id: 191, name: "Patio/Outdoor: Outdoor Coffee Table" },
+            { id: 192, name: "Patio/Outdoor: Outdoor Dining Chair" },
+            { id: 193, name: "Patio/Outdoor: Outdoor Dining Table" },
+            { id: 194, name: "Patio/Outdoor: Outdoor End Table" },
+            { id: 195, name: "Patio/Outdoor: Outdoor Fire Pit" },
+            { id: 196, name: "Patio/Outdoor: Outdoor Folding Chair" },
+            { id: 197, name: "Patio/Outdoor: Outdoor Loveseat" },
+            { id: 198, name: "Patio/Outdoor: Outdoor Rocker" },
+            { id: 199, name: "Patio/Outdoor: Outdoor Sectional" },
+            { id: 200, name: "Patio/Outdoor: Outdoor Sofa" },
+            { id: 201, name: "Patio/Outdoor: Outdoor Storage Cabinet" },
+            { id: 202, name: "Patio/Outdoor: Outdoor Umbrella" },
+            { id: 203, name: "Patio/Outdoor: Outdoor Umbrella Stand" },
+            { id: 204, name: "Patio/Outdoor: Patio Heater" },
+            { id: 205, name: "Patio/Outdoor: Porch Swing" },
+            { id: 206, name: "Patio/Outdoor: Smoker" },
+            { id: 207, name: "Patio/Outdoor: Picnic Table" },
+            { id: 208, name: "Rug: Accent" },
+            { id: 209, name: "Rugs: 2x3 Rug" },
+            { id: 210, name: "Rugs: 3x5 Rug" },
+            { id: 211, name: "Rugs: 4x6 Rug" },
+            { id: 212, name: "Rugs: 5x8 Rug" },
+            { id: 213, name: "Rugs: 7x9 Rug" },
+            { id: 214, name: "Rugs: 8x10 Rug" },
+            { id: 215, name: "Rugs: 9x12 Rug" },
+            { id: 216, name: "Rugs: 10x14 Rug" },
+            { id: 217, name: "Rugs: 12' Wide Rug (any length)" },
+            { id: 218, name: "Rugs: Rug Runner 6 FT or Under" },
+            { id: 219, name: "Rugs: Rug Runner Over 6 FT" }
+        ].map(item => ({ ...item, quantity: 0, isLocked: false }));
+
+        let searchQuery = "";
+        const searchInput = document.getElementById('search-input');
+        const itemsContainer = document.getElementById('items-container');
+
+        function renderItems() {
+            const filteredItems = furnitureInventory.filter(item => 
+                item.name.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+
+            if (filteredItems.length === 0) {
+                itemsContainer.innerHTML = `
+                    <div class="p-8 text-center text-sm text-slate-400 font-medium">
+                        Item not listed.
+                    </div>
+                `;
+                return;
+            }
+
+            itemsContainer.innerHTML = filteredItems.map(item => {
+                const isSelected = item.quantity > 0;
+                let rowBg = "bg-white hover:bg-slate-50";
+                let textStyle = "text-slate-700";
+                
+                if (item.status === "review") {
+                    rowBg = "bg-amber-50/60 hover:bg-amber-50";
+                    textStyle = "text-amber-900 font-medium";
+                } else if (item.status === "dont-pickup") {
+                    rowBg = "bg-red-50/40 opacity-70";
+                    textStyle = "text-red-800 line-through";
+                }
+
+                // If locked, apply an extra distinct styling overlay
+                if (item.isLocked) {
+                    rowBg = "bg-emerald-50/40 border-l-4 border-emerald-500";
+                }
+
+                return `
+                    <div class="flex items-center justify-between p-4 transition-all ${rowBg}">
+                        <div class="flex items-center gap-2 pr-4">
+                            <span class="text-sm ${textStyle}">${item.name}</span>
+                        </div>
+                        <div class="w-40 flex justify-end shrink-0 gap-2 items-center">
+                            ${item.status === 'dont-pickup' ? `
+                                <span class="text-xs font-semibold text-red-600 bg-red-100 px-2.5 py-1.5 rounded-lg select-none tracking-wide uppercase">
+                                    Not Accepting
+                                </span>
+                            ` : item.status === 'review' && !isSelected && !item.isLocked ? `
+                                <div class="flex flex-col items-end gap-1 w-full">
+                                    <span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded select-none tracking-wide uppercase mb-1">
+                                        To Be Reviewed
+                                    </span>
+                                    <button 
+                                        onclick="updateQty(${item.id}, 1)" 
+                                        class="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-xs shadow-sm transition-colors tracking-wide h-9"
+                                    >
+                                        Add To Request
+                                    </button>
+                                </div>
+                            ` : item.isLocked ? `
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-semibold text-emerald-700 bg-emerald-100/80 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                                        <span>Qty: ${item.quantity}</span>
+                                        <span class="text-emerald-600">✓</span>
+                                    </span>
+                                    <button onclick="unlockItem(${item.id})" class="text-xs text-slate-400 hover:text-red-500 font-medium px-1 transition-colors">
+                                        Edit
+                                    </button>
+                                </div>
+                            ` : isSelected ? `
+                                <div class="flex items-center bg-emerald-500 rounded-lg text-white shadow-sm overflow-hidden h-9">
+                                    <button onclick="updateQty(${item.id}, -1)" class="px-2.5 h-full hover:bg-emerald-600 font-bold transition-colors select-none text-sm">-</button>
+                                    <span class="w-8 text-center bg-white text-slate-800 font-semibold text-sm h-full flex items-center justify-center border-y border-emerald-500">${item.quantity}</span>
+                                    <button onclick="updateQty(${item.id}, 1)" class="px-2.5 h-full hover:bg-emerald-600 font-bold transition-colors select-none text-sm">+</button>
+                                </div>
+                                <button 
+                                    onclick="lockItem(${item.id})" 
+                                    class="bg-emerald-600 hover:bg-emerald-700 text-white h-9 w-9 rounded-lg flex items-center justify-center shadow-sm font-bold transition-colors text-base"
+                                    title="Lock in quantity"
+                                >
+                                    ✓
+                                </button>
+                            ` : `
+                                <button 
+                                    onclick="updateQty(${item.id}, 1)" 
+                                    class="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-xs shadow-sm transition-colors tracking-wide h-9"
+                                >
+                                    Add To Request
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateQty(id, change) {
+            const targetItem = furnitureInventory.find(item => item.id === id);
+            if (targetItem && targetItem.status !== 'dont-pickup' && !targetItem.isLocked) {
+                targetItem.quantity = Math.max(0, targetItem.quantity + change);
+                renderItems();
+            }
+        }
+
+        function lockItem(id) {
+            const targetItem = furnitureInventory.find(item => item.id === id);
+            if (targetItem && targetItem.quantity > 0) {
+                targetItem.isLocked = true;
+                renderItems();
+                sendDataToJotform();
+            }
+        }
+
+        function unlockItem(id) {
+            const targetItem = furnitureInventory.find(item => item.id === id);
+            if (targetItem) {
+                targetItem.isLocked = false;
+                renderItems();
+                sendDataToJotform(); // Instantly clears or revises data pipeline dynamically
+            }
+        }
+
+        // Send locked inputs back to Jotform data fields
+        function sendDataToJotform() {
+            const selectedItems = furnitureInventory.filter(item => item.quantity > 0 && item.isLocked);
+            const formattedOutput = selectedItems.map(item => `${item.name} (Qty: ${item.quantity})`).join(', ');
+            
+            JotForm.sendResult({
+                valid: true,
+                value: formattedOutput
+            });
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderItems();
+        });
+
+        // Initialize Jotform Widget Environment
+        JotForm.subscribe("ready", function() {
+            renderItems();
+        });
+    </script>
+</body>
+</html>
